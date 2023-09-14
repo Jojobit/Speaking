@@ -19,7 +19,7 @@ Welcome to this dedicated repository for conference materials. Here you will fin
 For further inquiries, collaborations, volunteering or speaking invitations, feel free to connect:
 
 - [Personal Website](https://andeverythingdata.com)
-- [Twitter](https://twitter.com/JojobitTweets))
+- [Twitter](https://twitter.com/JojobitTweets)
 - [Bluesky](jojobit.bsky.social)
 - [Linkedin](https://www.linkedin.com/in/ioanabouariu/)
 
