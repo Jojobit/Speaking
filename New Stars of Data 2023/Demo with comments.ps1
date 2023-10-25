@@ -1,6 +1,6 @@
 #A demo of how to create workspaces in PowerBI using PowerShell, upload a report to the workspace, set its parameters and trigger a refresh. Then, add the users with the correct access rights to the workspaces.
 #And a little bit of Starwars quotes, because why not?
-#Prerequisites: PowerBI module installed, PowerBI account with admin rights, workspaces.txt file with the names of the workspaces to be created
+#Prerequisites: PowerBI module installed, PowerBI account, workspaces.txt file with the names of the workspaces to be created
 #Install the PowerBI module, if not already installed
 if (!(Get-Module -Name MicrosoftPowerBIMgmt -ListAvailable)) {
     Install-Module -Name MicrosoftPowerBIMgmt
