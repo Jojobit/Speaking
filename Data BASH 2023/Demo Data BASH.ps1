@@ -4,13 +4,11 @@
 #change parameter
 #trigger refresh
 #add users to the workspaces
-#and a sneak peak into Fabtools
+#and a sneak peak into Fabtools, the PowerShell module for Fabric
 
 #Install the PowerBI module, if not already installed
 if (Get-Module -Name MicrosoftPowerBIMgmt -ListAvailable) 
-  {Write-Host "PowerBI module already installed"}   
-else 
-  {Install-Module -Name MicrosoftPowerBIMgmt}
+{Write-Host "PowerBI module already installed"} else {Install-Module -Name MicrosoftPowerBIMgmt}
 
 
 
@@ -26,12 +24,11 @@ $workspaces = Get-PowerBIWorkspace
 
 $workspaces
 
-$workspaces[0]
 $workspaces[-1]
 
 
 #Make a workspace with the name of the company
-$tempcompany = "Demo Data BASH"
+$tempcompany = "Demo Data BASH 2023"
 New-PowerBIWorkspace -Name $tempcompany
 
 #Verify that the workspace was created
@@ -42,14 +39,13 @@ $checkworkspace=Get-PowerBIWorkspace -name $tempcompany
 #Check the name and id of the workspace
 $checkworkspace.name
 $checkworkspace.id
-#Notice the workspace id
+#Notice the workspace id. Check in Service.
 
 
 #Check if the workspace already exists before creating it
 if (!(Get-PowerBIWorkspace -name $tempcompany)) {
   New-PowerBIWorkspace -Name $tempcompany
-}
-else {
+} else {
   Write-Host "Workspace already exists"
 }
 
@@ -58,15 +54,14 @@ else {
 #Use a text file with the names of the workspaces to be created
 #Loop through the text file to create the workspaces
 #Check if the workspace already exists before creating it 
-$CompanyNames = Get-Content -Path "C:\git\workspaces.txt"
+$CompanyNames = Get-Content -Path "C:\workspaces.txt"
 $CompanyNames
         
 foreach ($company in $CompanyNames) {
 $checkworkspace=Get-PowerBIWorkspace -name $company
   if( $company -ine $checkworkspace.Name) {
     New-PowerBIWorkspace -Name $company
-  } 
-  else {write-host "Workspace "$checkworkspace.name" already exists, will not create."}   
+  } else {write-host "Workspace "$checkworkspace.name" already exists, will not create."}   
 }
 
 #Check that the workspaces were created
@@ -80,10 +75,10 @@ $workspaces| select-object name,id
 
 
 #Upload the report from a file to the workspaces
-#The report "Best-Report-Ever.pbix" is stored in the C:\git\Demo folder
+#The report "Best-Report-Ever.pbix" is stored in the C:\git\DataWizard folder
 #The report will be uploaded to all the workspaces that were created, $workspaces
 #Foreach loop. The $w variable is the current workspace in the $workspaces list
-$path = "C:\git\Best-Report-Ever.pbix"
+$path = "C:\Best-Report-Ever.pbix"
 
 foreach ($w in $workspaces) {
       $workspace_name = $w.name
@@ -129,7 +124,9 @@ foreach ($w in $workspaces) {
 
 #Add the emails from a list as members of the workspaces we created
 #The list of emails is stored in the emails.txt file on C:\Demo folder and contains the list of emails, one email per line
-$emails = Get-Content "C:\git\emails.txt"
+
+
+$emails = Get-Content "C:\emails.txt"
 foreach ($w in $workspaces) {
   $workspace_name = $w.name
   write-host "Now adding the users to " $workspace_name
@@ -146,31 +143,23 @@ foreach ($w in $workspaces) {
 foreach ($w in $workspaces) {
   get-powerbidataset -workspaceid $w.id
   $d = Get-PowerBIDataset -workspaceid $w.Id
-  (Invoke-PowerBIRestMethod -Method Post -Url ("groups/"+$w.id+"/datasets/"+$d.id+"/refreshes") | ConvertFrom-Json)
+  (Invoke-PowerBIRestMethod -Method Post -Url ("datasets/"+$d.id+"/refreshes") | ConvertFrom-Json)
   }
 
 
-
 #I had enough of long Power BI Rest API calls and Invoke-PowerBIRestMethod...
-#So I made my own PowerShell module
-#Fabtools
-
+#Introducing Fabtools: https://github.com/Jojobit/Fabtools
 
 #Install the Fabtools module, if not already installed
-if (Get-Module -Name Fabtools -ListAvailable) 
-  {Write-Host "Fabtools already installed"}   
-else 
-  {Install-Module -Name Fabtools}
-
-
+Install-Module -Name Fabtools
 
 #Refresh with cmdlet from Fabtools
 foreach ($w in $workspaces) {
   get-powerbidataset -workspaceid $w.id
   $d = Get-PowerBIDataset -workspaceid $w.Id
-  Invoke-FabricDatasetRefresh -WorkspaceId $w.id -DatasetID $d.id
+  Invoke-FabricDatasetRefresh -DatasetID $d.id
 }
-#Nicer than (Invoke-PowerBIRestMethod -Method Post -Url ("groups/"+$w.id+"/datasets/"+$d.id+"/refreshes") | ConvertFrom-Json)
+#Nicer than (Invoke-PowerBIRestMethod -Method Post -Url ("datasets/"+$d.id+"/refreshes") | ConvertFrom-Json)
 
 
 #Cleanup. Delete all the workspaces in $workspaces from the tenant
@@ -185,23 +174,10 @@ foreach ($w in $workspaces){
 #You can pause (suspend) the capacity when you are not using it
 #You can resume the capacity when you need it
 
-#Connect 
+#Connect to Azure
 Connect-AzAccount
- 
-$env:azsub=""
-$env:resourcegroup=""
-$env:capacityname=""
+Set-FabricAuthToken -reset
 
-#Get the current state of the Fabric capacity
-Get-FabricCapacityState -subscriptionID $env:azsub -resourcegroup $env:resourcegroup -capacity $env:capacityname
- 
-#Resume the Fabric capacity
-resume-FabricCapacity -subscriptionID $env:azsub -resourcegroup $env:resourcegroup -capacity $env:capacityname
-#Let's check the state now
-Get-FabricCapacityState -subscriptionID $env:azsub -resourcegroup $env:resourcegroup -capacity $env:capacityname
-
-#Suspend the Fabric capacity
-suspend-FabricCapacity -subscriptionID $env:azsub -resourcegroup $env:resourcegroup -capacity $env:capacityname
-#Let's check the state now
-Get-FabricCapacityState -subscriptionID $env:azsub -resourcegroup $env:resourcegroup -capacity $env:capacityname
-
+#Get all capacities
+#This gives all the Fabric and Power BI capacities that the user has access to
+Get-FabricCapacity
