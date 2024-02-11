@@ -1,0 +1,67 @@
+How to Pause and Resume Fabric Capacity from Power BI
+This file contains a quick guide with the necessary scripts to set up an Azure Function App designed to pause and resume Fabric capacity and setup and trigger that directly from Power BI. 
+
+Features
+Pause/Resume Azure Fabric Capacity: Automate the pausing and resuming of Azure Fabric capacity to manage resources and costs efficiently.
+Integration with Power BI: Trigger these actions directly from Power BI Service through Power Automate.
+It leverages Azure Functions, HTTP triggers, Fabtools, Power BI and Power Automate.
+
+
+Function App - create 
+
+Identity - on, save, azure role assignments: resource contributor
+
+App files - requirements.ps1: 
+    'Az.Accounts' = '2.*'
+    'Fabtools' = '0.*'
+
+CORS: *
+
+Overview: create: http trigger - Resume
+	run.ps1:
+	
+param($Request, $TriggerMetadata)
+# Write to the Azure Functions log stream.
+Write-Host "PowerShell HTTP trigger function processed a request."
+
+Import-Module Az.Accounts
+        #Connect-azaccount -Subscription $subscriptionID
+        Connect-AzAccount -Identity
+        $env:aztoken = "Bearer " + (get-azAccessToken).Token
+resume-fabriccapacity -subscriptionID "1d9f0a8c-02b6-4ebc-b923-8d8e7d5ef9fa" -resourcegroup "rg-lab-ioana" -capacity "testf2capacity"
+
+
+$body = "The capacity has been activated"
+
+# Associate values to output bindings by calling 'Push-OutputBinding'.
+Push-OutputBinding -Name Response -Value ([HttpResponseContext]@{
+    StatusCode = [HttpStatusCode]::OK
+    Body = $body
+})
+
+Overview: create: http trigger - Pause
+	
+param($Request, $TriggerMetadata)
+# Write to the Azure Functions log stream.
+Write-Host "PowerShell HTTP trigger function processed a request."
+
+Import-Module Az.Accounts
+        #Connect-azaccount -Subscription $subscriptionID
+        Connect-AzAccount -Identity
+        $env:aztoken = "Bearer " + (get-azAccessToken).Token
+suspend-fabriccapacity -subscriptionID "1d9f0a8c-02b6-4ebc-b923-8d8e7d5ef9fa" -resourcegroup "rg-lab-ioana" -capacity "testf2capacity"
+
+
+$body = "The capacity has been paused"
+
+# Associate values to output bindings by calling 'Push-OutputBinding'.
+Push-OutputBinding -Name Response -Value ([HttpResponseContext]@{
+    StatusCode = [HttpStatusCode]::OK
+    Body = $body
+})
+
+
+
+Power BI: Power Automate visual, HTTP.
+
+For a detailed step-by-step guide on how to set up this, check out https://andeverythingdata.com/writings/ 

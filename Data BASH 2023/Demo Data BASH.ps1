@@ -176,7 +176,7 @@ foreach ($w in $workspaces){
 
 #Connect to Azure
 Connect-AzAccount
-Set-FabricAuthToken -reset
+Set-FabricAuthToken
 
 #Get all capacities
 #This gives all the Fabric and Power BI capacities that the user has access to
